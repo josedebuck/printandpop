@@ -75,11 +75,11 @@ export default async function Panel() {
       {destacados.length > 0 && (
         <section className="card">
           <h2>Productos destacados</h2>
-          <table>
+          <table className="cards">
             <thead><tr><th>Producto</th><th>Unidades</th><th>% de ventas</th><th>Ganancia</th></tr></thead>
             <tbody>
               {destacados.map((x) => (
-                <tr key={x.nombre}><td>{x.nombre}</td><td>{x.unidades}</td><td>{x.porcentaje ?? 0}%</td><td>{ars(Number(x.ganancia))}</td></tr>
+                <tr key={x.nombre}><td className="titulo">{x.nombre}</td><td data-label="Unidades">{x.unidades}</td><td data-label="% de ventas">{x.porcentaje ?? 0}%</td><td data-label="Ganancia">{ars(Number(x.ganancia))}</td></tr>
               ))}
             </tbody>
           </table>

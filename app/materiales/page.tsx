@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { ars } from "@/lib/cost";
 import type { MaterialDB } from "@/lib/types";
 import SinDB from "@/components/SinDB";
+import { useCantidad } from "@/components/useCantidad";
 
 const CATS = ["papel", "tinta", "packaging", "otro"] as const;
 const vacio = {
@@ -17,6 +18,7 @@ export default function Materiales() {
   const [items, setItems] = useState<MaterialDB[]>([]);
   const [nuevo, setNuevo] = useState(vacio);
   const [msg, setMsg] = useState("");
+  const { pedir, dialogo } = useCantidad();
 
   const cargar = useCallback(async () => {
     if (!supabase) return;
@@ -42,9 +44,9 @@ export default function Materiales() {
     setMsg(error ? error.message : "");
   }
 
-  function mover(m: MaterialDB, signo: 1 | -1) {
-    const n = Number(prompt(signo > 0 ? `¿Cuántas unidades de "${m.nombre}" compraste?` : `¿Cuántas unidades de "${m.nombre}" usaste?`));
-    if (!n || n <= 0) return;
+  async function mover(m: MaterialDB, signo: 1 | -1) {
+    const n = await pedir(signo > 0 ? `¿Cuántas unidades de "${m.nombre}" compraste?` : `¿Cuántas unidades de "${m.nombre}" usaste?`);
+    if (!n) return;
     const x = { ...m, stock_actual: Math.max(m.stock_actual + signo * n, 0) };
     cambiar(m.id, x);
     guardar(x);
@@ -87,6 +89,7 @@ export default function Materiales() {
 
   return (
     <>
+      {dialogo}
       <h1>Materiales</h1>
       <p className="sub">
         El costo por unidad se edita directo y se usa para calcular el costo de los productos. El stock te dice qué
@@ -101,16 +104,16 @@ export default function Materiales() {
         ) : (
           <>
             <div className="table-wrap">
-              <table>
+              <table className="cards">
                 <thead><tr><th>Material</th><th>Tenés</th><th>Conviene comprar</th><th>Paquetes</th><th>Costo estimado</th></tr></thead>
                 <tbody>
                   {compras.map(({ m, comprar, paquetes, costo }) => (
                     <tr key={m.id}>
-                      <td><span className="badge" style={{ background: "var(--alert-bg)", color: "var(--alert)" }}>Poco stock</span> {m.nombre}</td>
-                      <td>{m.stock_actual}</td>
-                      <td>{comprar > 0 ? comprar : "Definí “Comprar hasta”"}</td>
-                      <td>{comprar > 0 ? `≈ ${paquetes}` : "—"}</td>
-                      <td>{ars(costo)}</td>
+                      <td className="titulo"><span className="badge" style={{ background: "var(--alert-bg)", color: "var(--alert)" }}>Poco stock</span> {m.nombre}</td>
+                      <td data-label="Tenés">{m.stock_actual}</td>
+                      <td data-label="Conviene comprar">{comprar > 0 ? comprar : "Definí “Comprar hasta”"}</td>
+                      <td data-label="Paquetes">{comprar > 0 ? `≈ ${paquetes}` : "—"}</td>
+                      <td data-label="Costo estimado">{ars(costo)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -124,7 +127,7 @@ export default function Materiales() {
       <section className="card">
         <h2>Stock y costos</h2>
         <div className="table-wrap">
-          <table>
+          <table className="cards">
             <thead>
               <tr>
                 <th>Material</th><th>Tipo</th><th>Costo por unidad</th><th>Unidades por paquete</th>
@@ -136,18 +139,18 @@ export default function Materiales() {
                 const bajo = m.stock_minimo > 0 && m.stock_actual <= m.stock_minimo;
                 return (
                   <tr key={m.id}>
-                    <td><input aria-label="Nombre" value={m.nombre} onChange={(e) => cambiar(m.id, { nombre: e.target.value })} onBlur={() => guardar(m)} /></td>
-                    <td>
+                    <td className="titulo"><input aria-label="Nombre" value={m.nombre} onChange={(e) => cambiar(m.id, { nombre: e.target.value })} onBlur={() => guardar(m)} /></td>
+                    <td data-label="Tipo">
                       <select aria-label="Tipo" value={m.categoria} onChange={(e) => { const x = { ...m, categoria: e.target.value as MaterialDB["categoria"] }; cambiar(m.id, x); guardar(x); }}>
                         {CATS.map((c) => <option key={c}>{c}</option>)}
                       </select>
                     </td>
-                    <td><input aria-label="Costo por unidad" type="number" min={0} step="any" value={m.costo_unitario} onChange={(e) => cambiar(m.id, { costo_unitario: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
-                    <td><input aria-label="Unidades por paquete" type="number" min={1} step="any" value={m.unidades_por_paquete} onChange={(e) => cambiar(m.id, { unidades_por_paquete: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
-                    <td><input aria-label="Stock" type="number" min={0} step="any" style={bajo ? { borderColor: "var(--alert)", color: "var(--alert)", fontWeight: 700 } : undefined} value={m.stock_actual} onChange={(e) => cambiar(m.id, { stock_actual: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
-                    <td><input aria-label="Stock mínimo" type="number" min={0} step="any" value={m.stock_minimo} onChange={(e) => cambiar(m.id, { stock_minimo: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
-                    <td><input aria-label="Comprar hasta" type="number" min={0} step="any" value={m.stock_ideal} onChange={(e) => cambiar(m.id, { stock_ideal: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
-                    <td style={{ whiteSpace: "nowrap" }}>
+                    <td data-label="Costo por unidad"><input aria-label="Costo por unidad" type="number" min={0} step="any" value={m.costo_unitario} onChange={(e) => cambiar(m.id, { costo_unitario: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
+                    <td data-label="Por paquete"><input aria-label="Unidades por paquete" type="number" min={1} step="any" value={m.unidades_por_paquete} onChange={(e) => cambiar(m.id, { unidades_por_paquete: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
+                    <td data-label="Stock"><input aria-label="Stock" type="number" min={0} step="any" style={bajo ? { borderColor: "var(--alert)", color: "var(--alert)", fontWeight: 700 } : undefined} value={m.stock_actual} onChange={(e) => cambiar(m.id, { stock_actual: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
+                    <td data-label="Mínimo"><input aria-label="Stock mínimo" type="number" min={0} step="any" value={m.stock_minimo} onChange={(e) => cambiar(m.id, { stock_minimo: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
+                    <td data-label="Comprar hasta"><input aria-label="Comprar hasta" type="number" min={0} step="any" value={m.stock_ideal} onChange={(e) => cambiar(m.id, { stock_ideal: num(e.target.value) })} onBlur={() => guardar(m)} /></td>
+                    <td className="acciones">
                       <button className="btn ghost" onClick={() => mover(m, 1)}>Compré</button>{" "}
                       <button className="btn ghost" onClick={() => mover(m, -1)}>Usé</button>{" "}
                       <button className="btn x" onClick={() => borrar(m)}>Borrar</button>

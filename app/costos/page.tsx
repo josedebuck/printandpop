@@ -50,7 +50,7 @@ export default function Costos() {
       <section className="card">
         <h2>1. Materias primas</h2>
         <div className="table-wrap">
-          <table>
+          <table className="cards">
             <thead>
               <tr>
                 <th>Material</th><th>Precio del paquete</th><th>Rinde (hojas o usos)</th>
@@ -62,12 +62,12 @@ export default function Costos() {
                 const l = lineas.find((x) => x.materialId === m.id);
                 return (
                   <tr key={m.id}>
-                    <td><input aria-label="Nombre" value={m.nombre} onChange={(e) => editarMaterial(m.id, { nombre: e.target.value })} /></td>
-                    <td><input aria-label="Precio del paquete" type="number" min={0} value={m.precioPaquete} onChange={(e) => editarMaterial(m.id, { precioPaquete: n(e.target.value) })} /></td>
-                    <td><input aria-label="Rinde" type="number" min={1} value={m.unidadesPorPaquete} onChange={(e) => editarMaterial(m.id, { unidadesPorPaquete: n(e.target.value) })} /></td>
-                    <td>{ars(costoUnitario(m))}</td>
-                    <td><input aria-label="Cantidad por hoja" type="number" min={0} step="0.01" value={l?.cantidadPorHoja ?? 0} onChange={(e) => editarLinea(m.id, n(e.target.value))} /></td>
-                    <td><button className="btn x" onClick={() => quitarMaterial(m.id)} aria-label={`Quitar ${m.nombre}`}>Quitar</button></td>
+                    <td className="titulo"><input aria-label="Nombre" value={m.nombre} onChange={(e) => editarMaterial(m.id, { nombre: e.target.value })} /></td>
+                    <td data-label="Precio del paquete"><input aria-label="Precio del paquete" type="number" min={0} value={m.precioPaquete} onChange={(e) => editarMaterial(m.id, { precioPaquete: n(e.target.value) })} /></td>
+                    <td data-label="Rinde"><input aria-label="Rinde" type="number" min={1} value={m.unidadesPorPaquete} onChange={(e) => editarMaterial(m.id, { unidadesPorPaquete: n(e.target.value) })} /></td>
+                    <td data-label="Costo por unidad">{ars(costoUnitario(m))}</td>
+                    <td data-label="Lleva cada hoja"><input aria-label="Cantidad por hoja" type="number" min={0} step="0.01" value={l?.cantidadPorHoja ?? 0} onChange={(e) => editarLinea(m.id, n(e.target.value))} /></td>
+                    <td className="acciones"><button className="btn x" onClick={() => quitarMaterial(m.id)} aria-label={`Quitar ${m.nombre}`}>Quitar</button></td>
                   </tr>
                 );
               })}

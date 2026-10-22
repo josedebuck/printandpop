@@ -68,16 +68,16 @@ export default function Ventas() {
         <h2>Últimas ventas</h2>
         {ventas.length === 0 ? <p className="ok">Todavía no hay ventas registradas.</p> : (
           <div className="table-wrap">
-            <table>
+            <table className="cards">
               <thead><tr><th>Fecha</th><th>Producto</th><th>Cantidad</th><th>Total</th><th>Ganancia</th></tr></thead>
               <tbody>
                 {ventas.map((v) => (
                   <tr key={v.id}>
-                    <td>{new Date(v.created_at).toLocaleDateString("es-AR")}</td>
-                    <td>{v.products?.nombre}</td>
-                    <td>{v.cantidad}</td>
-                    <td>{ars(v.cantidad * v.precio_unitario)}</td>
-                    <td>{ars(v.cantidad * (v.precio_unitario - v.costo_unitario))}</td>
+                    <td data-label="Fecha">{new Date(v.created_at).toLocaleDateString("es-AR")}</td>
+                    <td className="titulo">{v.products?.nombre}</td>
+                    <td data-label="Cantidad">{v.cantidad}</td>
+                    <td data-label="Total">{ars(v.cantidad * v.precio_unitario)}</td>
+                    <td data-label="Ganancia">{ars(v.cantidad * (v.precio_unitario - v.costo_unitario))}</td>
                   </tr>
                 ))}
               </tbody>

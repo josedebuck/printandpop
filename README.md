@@ -1,26 +1,93 @@
 # print&pop · gestión
 
-Next.js (App Router) + Supabase.
+Aplicación web para administrar un emprendimiento de papelería creativa y stickers: calcula el costo de cada producto, lleva el stock de productos y materiales, registra ventas y muestra la ganancia y el producto estrella.
 
-## Si ya tenés la versión anterior (con datos)
-Ejecutá `supabase/migracion-materiales.sql` en el SQL Editor (no borra nada) y reemplazá los archivos.
-Costo por unidad editable y stock de materiales vienen en esa migración.
+Hecha con **Next.js** (App Router), **TypeScript** y **Supabase** (PostgreSQL).
 
-## Instalación desde cero
-`schema.sql` ya incluye todo. Si lo ejecutás, borra las tablas anteriores.
+## Funciones
 
-## Primera versión
-1. En Supabase → SQL Editor, pegar y ejecutar TODO `supabase/schema.sql` (borra las tablas viejas y crea las nuevas).
-2. Reemplazar los archivos del proyecto por estos y reiniciar `npm run dev`.
+- **Productos**: sticker suelto, plancha entera, pack y pedido personalizado. Cada uno lleva una receta de materiales, y el costo, la ganancia y el margen se calculan solos.
+- **Materiales**: papeles, tinta y packaging con costo por unidad editable.
+- **Stock de materiales**: stock actual, mínimo y "comprar hasta", con una lista de compras que estima cuánto comprar y cuánto cuesta.
+- **Stock de productos**: sumar stock y aviso cuando está por debajo del mínimo.
+- **Ventas**: cada venta descuenta stock y guarda el precio y el costo del momento, para que la ganancia no cambie si después sube un insumo.
+- **Panel**: total vendido, ganancia, avisos de poco stock (productos y materiales), producto estrella (el que más unidades vende) y productos destacados.
+- **Catálogo**: vista para mostrar los productos visibles.
+- **Calculadora** (`/costos`): herramienta suelta para simular costos sin guardar nada.
 
-## Pantallas
-- `/` Panel: ventas totales, ganancia, stock bajo, producto estrella y destacados.
-- `/productos` Agregar producto (sticker, plancha, pack, personalizado), ver costo y ganancia, sumar stock, destacar.
-- `/materiales` Papeles, tinta ($230 por hoja de entrada), packaging.
-- `/ventas` Registrar ventas (descuenta stock y guarda la ganancia).
-- `/costos` Calculadora suelta (no guarda nada).
-- `/catalogo` Catálogo para mostrar.
+## Cómo calcula el costo
 
-## Pendiente antes de publicar
-Las políticas de Supabase están abiertas para probar en local. Hay que agregar login
-(Supabase Auth) y cambiarlas a `to authenticated`.
+| Tipo | Costo |
+|---|---|
+| Sticker suelto | (materiales por hoja) ÷ stickers por hoja |
+| Plancha entera | materiales por hoja |
+| Pack | materiales del pack (caja, bolsita, tarjeta...) + costo de los productos que trae |
+| Personalizado | materiales cargados en la receta |
+
+Cada material aporta `cantidad × costo por unidad`. Por ejemplo, la tinta se carga como un material de $230 por hoja.
+
+## Requisitos
+
+- Node.js 18.18 o superior
+- Una cuenta gratuita de [Supabase](https://supabase.com)
+
+## Instalación
+
+```bash
+git clone <url-del-repositorio>
+cd stickers-app
+npm install
+cp .env.example .env.local
+```
+
+1. Creá un proyecto en Supabase.
+2. En **SQL Editor**, ejecutá `supabase/schema.sql` (crea tablas, vistas y triggers, y carga materiales de ejemplo).
+3. En **Project Settings → API**, copiá la URL del proyecto y la clave `anon public` (o `publishable`) y pegalas en `.env.local`:
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave
+   ```
+
+4. Iniciá la app:
+
+   ```bash
+   npm run dev
+   ```
+
+   Abrí http://localhost:3000.
+
+> `schema.sql` borra las tablas existentes antes de crearlas. Si ya tenés datos de una versión anterior, usá `supabase/migracion-materiales.sql`, que solo agrega lo nuevo.
+
+## Estructura
+
+```
+app/
+  page.tsx          Panel
+  productos/        Alta, costo, ganancia y stock de productos
+  materiales/       Costos, stock y lista de compras
+  ventas/           Registro de ventas
+  costos/           Calculadora suelta
+  catalogo/         Catálogo
+lib/
+  supabase.ts       Cliente de Supabase
+  cost.ts           Funciones de la calculadora
+  types.ts          Tipos compartidos
+supabase/
+  schema.sql                  Esquema completo
+  migracion-materiales.sql    Migración incremental
+```
+
+## Seguridad: leer antes de publicar
+
+Las políticas de Row Level Security incluidas están **abiertas a propósito** para poder probar en local: cualquiera que tenga la clave `anon` puede leer y escribir. No publiques la app así. Antes de desplegarla:
+
+1. Agregá login con Supabase Auth.
+2. Reemplazá las políticas `dev abierto` por políticas `to authenticated`, dejando solo lectura pública para el catálogo.
+
+## Pendiente
+
+- Login y políticas definitivas.
+- Descuento automático de materiales al registrar ventas.
+- Imágenes de productos en el catálogo.
+- Edición de productos ya creados y de sus recetas.

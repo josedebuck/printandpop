@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { ars } from "@/lib/cost";
 import { TIPOS, type Costo, type MaterialDB, type Producto, type Tipo } from "@/lib/types";
 import SinDB from "@/components/SinDB";
+import { useCantidad } from "@/components/useCantidad";
 
 type LineaMat = { material_id: string; cantidad: number };
 type LineaItem = { item_id: string; cantidad: number };
@@ -19,6 +20,7 @@ export default function Productos() {
   const [rec, setRec] = useState<LineaMat[]>([]);
   const [items, setItems] = useState<LineaItem[]>([]);
   const [msg, setMsg] = useState("");
+  const { pedir, dialogo } = useCantidad();
 
   const cargar = useCallback(async () => {
     if (!supabase) return;
@@ -59,8 +61,8 @@ export default function Productos() {
 
   async function sumarStock(p: Producto) {
     if (!supabase) return;
-    const n = Number(prompt(`¿Cuántas unidades de "${p.nombre}" entran al stock?`));
-    if (!n || n <= 0) return;
+    const n = await pedir(`¿Cuántas unidades de "${p.nombre}" entran al stock?`);
+    if (!n) return;
     const { error } = await supabase.from("stock_movements").insert({ product_id: p.id, tipo: "entrada", cantidad: Math.round(n) });
     if (error) setMsg(error.message); else cargar();
   }
@@ -83,6 +85,7 @@ export default function Productos() {
 
   return (
     <>
+      {dialogo}
       <h1>Productos</h1>
       <p className="sub">Cada producto lleva su receta de materiales; el costo y la ganancia se calculan solos.</p>
       {msg && <div className="alert">{msg}</div>}
@@ -148,7 +151,7 @@ export default function Productos() {
       <section className="card">
         {prods.length === 0 ? <p className="ok">Todavía no hay productos. Agregá el primero.</p> : (
           <div className="table-wrap">
-            <table>
+            <table className="cards">
               <thead><tr><th>Producto</th><th>Tipo</th><th>Costo</th><th>Precio</th><th>Ganancia</th><th>Stock</th><th></th></tr></thead>
               <tbody>
                 {prods.map((p) => {
@@ -156,13 +159,13 @@ export default function Productos() {
                   const bajo = p.stock_actual <= p.stock_minimo;
                   return (
                     <tr key={p.id}>
-                      <td>{p.destacado && <span className="badge">Destacado</span>} {p.nombre}</td>
-                      <td>{TIPOS.find((t) => t.v === p.tipo)?.label}</td>
-                      <td>{ars(c?.costo ?? 0)}</td>
-                      <td>{ars(p.precio_venta)}</td>
-                      <td>{ars(c?.ganancia ?? 0)} <span className="ok">({c?.margen_pct ?? 0}%)</span></td>
-                      <td style={bajo ? { color: "var(--alert)", fontWeight: 700 } : undefined}>{p.stock_actual}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>
+                      <td className="titulo">{p.destacado && <span className="badge">Destacado</span>} {p.nombre}</td>
+                      <td data-label="Tipo">{TIPOS.find((t) => t.v === p.tipo)?.label}</td>
+                      <td data-label="Costo">{ars(c?.costo ?? 0)}</td>
+                      <td data-label="Precio">{ars(p.precio_venta)}</td>
+                      <td data-label="Ganancia">{ars(c?.ganancia ?? 0)} <span className="ok">({c?.margen_pct ?? 0}%)</span></td>
+                      <td data-label="Stock" style={bajo ? { color: "var(--alert)", fontWeight: 700 } : undefined}>{p.stock_actual}</td>
+                      <td className="acciones">
                         <button className="btn ghost" onClick={() => sumarStock(p)}>Sumar stock</button>{" "}
                         <button className="btn ghost" onClick={() => destacar(p)}>{p.destacado ? "Quitar destacado" : "Destacar"}</button>{" "}
                         <button className="btn x" onClick={() => borrar(p)}>Borrar</button>

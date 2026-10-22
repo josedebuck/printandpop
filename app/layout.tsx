@@ -1,11 +1,24 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
 import Link from "next/link";
+import BottomNav from "@/components/BottomNav";
 import "./globals.css";
 
 const font = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-body" });
 
-export const metadata: Metadata = { title: "print&pop · gestión", description: "Costos, stock y catálogo" };
+export const metadata: Metadata = {
+  title: "print&pop · gestión",
+  description: "Costos, stock y catálogo",
+  icons: { icon: "/icon-192.png", apple: "/icon-192.png" },
+  appleWebApp: { capable: true, title: "print&pop", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#3562a8",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Link href="/catalogo" className="link">Catálogo</Link>
         </nav>
         <main>{children}</main>
+        <BottomNav />
       </body>
     </html>
   );
