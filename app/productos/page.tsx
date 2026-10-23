@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { ars } from "@/lib/cost";
 import { TIPOS, type Costo, type MaterialDB, type Producto, type Tipo } from "@/lib/types";
 import SinDB from "@/components/SinDB";
+import Buscador, { coincide } from "@/components/Buscador";
 import { useCantidad } from "@/components/useCantidad";
 
 type LineaMat = { material_id: string; cantidad: number };
@@ -20,6 +21,7 @@ export default function Productos() {
   const [rec, setRec] = useState<LineaMat[]>([]);
   const [items, setItems] = useState<LineaItem[]>([]);
   const [msg, setMsg] = useState("");
+  const [q, setQ] = useState("");
   const { pedir, dialogo } = useCantidad();
 
   const cargar = useCallback(async () => {
@@ -82,6 +84,7 @@ export default function Productos() {
 
   if (!supabase) return <SinDB />;
   const sueltos = prods.filter((p) => p.tipo !== "pack");
+  const visibles = prods.filter((p) => coincide(q, p.nombre, TIPOS.find((t) => t.v === p.tipo)?.label));
 
   return (
     <>
@@ -149,12 +152,13 @@ export default function Productos() {
       )}
 
       <section className="card">
-        {prods.length === 0 ? <p className="ok">Todavía no hay productos. Agregá el primero.</p> : (
+        {prods.length > 0 && <Buscador valor={q} onChange={setQ} placeholder="Buscar producto o tipo" />}
+        {prods.length === 0 ? <p className="ok">Todavía no hay productos. Agregá el primero.</p> : visibles.length === 0 ? <p className="ok">No hay productos que coincidan con “{q}”.</p> : (
           <div className="table-wrap">
             <table className="cards">
               <thead><tr><th>Producto</th><th>Tipo</th><th>Costo</th><th>Precio</th><th>Ganancia</th><th>Stock</th><th></th></tr></thead>
               <tbody>
-                {prods.map((p) => {
+                {visibles.map((p) => {
                   const c = costos[p.id];
                   const bajo = p.stock_actual <= p.stock_minimo;
                   return (

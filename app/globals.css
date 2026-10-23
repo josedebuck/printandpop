@@ -111,3 +111,10 @@ dialog.sheet::backdrop { background: rgba(20, 28, 50, .55); }
   table.cards td.acciones .btn { flex: 1 1 auto; }
   .card > .table-wrap + p { margin-bottom: 0; }
 }
+
+/* ---------- Buscador ---------- */
+.buscador { position: relative; margin-bottom: 14px; }
+.buscador svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.buscador input { padding-left: 42px; padding-right: 44px; -webkit-appearance: none; appearance: none; }
+.buscador input::-webkit-search-cancel-button { display: none; }
+.buscador button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: 0; background: transparent; color: var(--muted); font-size: 24px; line-height: 1; cursor: pointer; border-radius: 10px; }

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { ars } from "@/lib/cost";
 import type { MaterialDB } from "@/lib/types";
 import SinDB from "@/components/SinDB";
+import Buscador, { coincide } from "@/components/Buscador";
 import { useCantidad } from "@/components/useCantidad";
 
 const CATS = ["papel", "tinta", "packaging", "otro"] as const;
@@ -18,6 +19,7 @@ export default function Materiales() {
   const [items, setItems] = useState<MaterialDB[]>([]);
   const [nuevo, setNuevo] = useState(vacio);
   const [msg, setMsg] = useState("");
+  const [q, setQ] = useState("");
   const { pedir, dialogo } = useCantidad();
 
   const cargar = useCallback(async () => {
@@ -85,6 +87,7 @@ export default function Materiales() {
       const comprar = Math.max(hasta - m.stock_actual, 0);
       return { m, comprar, paquetes: Math.ceil(comprar / Math.max(m.unidades_por_paquete, 0.01)), costo: comprar * m.costo_unitario };
     });
+  const visibles = items.filter((m) => coincide(q, m.nombre, m.categoria));
   const totalCompra = compras.reduce((a, c) => a + c.costo, 0);
 
   return (
@@ -126,6 +129,8 @@ export default function Materiales() {
 
       <section className="card">
         <h2>Stock y costos</h2>
+        {items.length > 0 && <Buscador valor={q} onChange={setQ} placeholder="Buscar material o tipo" />}
+        {items.length > 0 && visibles.length === 0 && <p className="ok">No hay materiales que coincidan con “{q}”.</p>}
         <div className="table-wrap">
           <table className="cards">
             <thead>
@@ -135,7 +140,7 @@ export default function Materiales() {
               </tr>
             </thead>
             <tbody>
-              {items.map((m) => {
+              {visibles.map((m) => {
                 const bajo = m.stock_minimo > 0 && m.stock_actual <= m.stock_minimo;
                 return (
                   <tr key={m.id}>

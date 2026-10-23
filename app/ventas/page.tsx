@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ars } from "@/lib/cost";
 import SinDB from "@/components/SinDB";
+import Buscador, { coincide } from "@/components/Buscador";
 
 type Prod = { id: string; nombre: string; precio_venta: number; stock_actual: number };
 type Venta = { id: string; cantidad: number; precio_unitario: number; costo_unitario: number; created_at: string; products: { nombre: string } | null };
@@ -15,6 +16,7 @@ export default function Ventas() {
   const [cant, setCant] = useState(1);
   const [precio, setPrecio] = useState(0);
   const [msg, setMsg] = useState("");
+  const [q, setQ] = useState("");
 
   const cargar = useCallback(async () => {
     if (!supabase) return;
@@ -44,6 +46,8 @@ export default function Ventas() {
 
   if (!supabase) return <SinDB />;
 
+  const opciones = prods.filter((p) => p.id === pid || coincide(q, p.nombre));
+
   return (
     <>
       <h1>Ventas</h1>
@@ -51,11 +55,12 @@ export default function Ventas() {
       {msg && <div className="alert">{msg}</div>}
 
       <section className="card">
+        <Buscador valor={q} onChange={setQ} placeholder="Buscar producto" />
         <div className="row">
           <div><label htmlFor="vp">Producto</label>
             <select id="vp" value={pid} onChange={(e) => elegir(e.target.value)}>
               <option value="">Elegí un producto</option>
-              {prods.map((p) => <option key={p.id} value={p.id}>{p.nombre} (stock {p.stock_actual})</option>)}
+              {opciones.map((p) => <option key={p.id} value={p.id}>{p.nombre} (stock {p.stock_actual})</option>)}
             </select>
           </div>
           <div><label htmlFor="vc">Cantidad</label><input id="vc" type="number" min={1} value={cant} onChange={(e) => setCant(Number(e.target.value))} /></div>
