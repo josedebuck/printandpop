@@ -59,6 +59,16 @@ cp .env.example .env.local
 
 > `schema.sql` borra las tablas existentes antes de crearlas. Si ya tenés datos de una versión anterior, usá `supabase/migracion-materiales.sql`, que solo agrega lo nuevo.
 
+## Fotos de productos (Cloudinary)
+
+Cada producto puede tener una foto de portada, que se ve en la lista de productos y en el catálogo.
+
+1. Creá una cuenta gratuita en [Cloudinary](https://cloudinary.com).
+2. En el *Dashboard* copiá el **Cloud name**, la **API Key** y el **API Secret**.
+3. Pegalos en `.env.local` (mirá `.env.example`) y reiniciá `npm run dev`.
+
+La foto se achica en el celular antes de subirse. El servidor solo firma la subida (`app/api/cloudinary-firma`), así que el API Secret nunca llega al navegador. Al desplegar (por ejemplo en Vercel), cargá las tres variables en la configuración del proyecto.
+
 ## Estructura
 
 ```
@@ -82,12 +92,12 @@ supabase/
 
 Las políticas de Row Level Security incluidas están **abiertas a propósito** para poder probar en local: cualquiera que tenga la clave `anon` puede leer y escribir. No publiques la app así. Antes de desplegarla:
 
-1. Agregá login con Supabase Auth.
+1. Agregá login con Supabase Auth, y que la ruta `/api/cloudinary-firma` exija sesión iniciada (hoy cualquiera podría pedir una firma de subida).
 2. Reemplazá las políticas `dev abierto` por políticas `to authenticated`, dejando solo lectura pública para el catálogo.
 
 ## Pendiente
 
 - Login y políticas definitivas.
 - Descuento automático de materiales al registrar ventas.
-- Imágenes de productos en el catálogo.
+- Borrar de Cloudinary las fotos reemplazadas o quitadas (hoy quedan guardadas en la cuenta).
 - Edición de productos ya creados y de sus recetas.

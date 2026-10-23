@@ -24,6 +24,7 @@ export type Producto = {
   nombre: string;
   tipo: Tipo;
   descripcion: string | null;
+  imagen_url: string | null;
   precio_venta: number;
   stickers_por_hoja: number;
   stock_actual: number;

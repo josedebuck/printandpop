@@ -6,6 +6,8 @@ import { ars } from "@/lib/cost";
 import { TIPOS, type Costo, type MaterialDB, type Producto, type Tipo } from "@/lib/types";
 import SinDB from "@/components/SinDB";
 import Buscador, { coincide } from "@/components/Buscador";
+import SubirImagen from "@/components/SubirImagen";
+import { optimizada } from "@/lib/imagen";
 import { useCantidad } from "@/components/useCantidad";
 
 type LineaMat = { material_id: string; cantidad: number };
@@ -22,6 +24,7 @@ export default function Productos() {
   const [items, setItems] = useState<LineaItem[]>([]);
   const [msg, setMsg] = useState("");
   const [q, setQ] = useState("");
+  const [imagen, setImagen] = useState<string | null>(null);
   const { pedir, dialogo } = useCantidad();
 
   const cargar = useCallback(async () => {
@@ -45,13 +48,13 @@ export default function Productos() {
     const tinta = mats.find((m) => m.categoria === "tinta");
     const papel = mats.find((m) => m.categoria === "papel");
     setRec([tinta, papel].filter(Boolean).map((m) => ({ material_id: m!.id, cantidad: 1 })));
-    setItems([]); setF(formVacio); setAbierto(true); setMsg("");
+    setItems([]); setF(formVacio); setImagen(null); setAbierto(true); setMsg("");
   }
 
   async function guardar() {
     if (!supabase || !f.nombre.trim()) return setMsg("Poné un nombre para el producto.");
     const { data, error } = await supabase.from("products")
-      .insert({ ...f, nombre: f.nombre.trim(), stickers_por_hoja: f.tipo === "sticker" ? Math.max(f.stickers_por_hoja, 1) : 1 })
+      .insert({ ...f, nombre: f.nombre.trim(), stickers_por_hoja: f.tipo === "sticker" ? Math.max(f.stickers_por_hoja, 1) : 1, imagen_url: imagen })
       .select("id").single();
     if (error || !data) return setMsg(error?.message ?? "No se pudo guardar.");
     const lm = rec.filter((r) => r.material_id && r.cantidad > 0).map((r) => ({ product_id: data.id, ...r }));
@@ -66,6 +69,12 @@ export default function Productos() {
     const n = await pedir(`¿Cuántas unidades de "${p.nombre}" entran al stock?`);
     if (!n) return;
     const { error } = await supabase.from("stock_movements").insert({ product_id: p.id, tipo: "entrada", cantidad: Math.round(n) });
+    if (error) setMsg(error.message); else cargar();
+  }
+
+  async function cambiarFoto(p: Producto, url: string | null) {
+    if (!supabase) return;
+    const { error } = await supabase.from("products").update({ imagen_url: url }).eq("id", p.id);
     if (error) setMsg(error.message); else cargar();
   }
 
@@ -109,6 +118,11 @@ export default function Productos() {
               <div><label htmlFor="ps">Stickers por hoja</label><input id="ps" type="number" min={1} value={f.stickers_por_hoja} onChange={(e) => setF({ ...f, stickers_por_hoja: num(e.target.value) })} /></div>
             )}
             <div><label htmlFor="pm">Avisar con stock de</label><input id="pm" type="number" min={0} value={f.stock_minimo} onChange={(e) => setF({ ...f, stock_minimo: num(e.target.value) })} /></div>
+          </div>
+
+          <div style={{ marginTop: 18 }}>
+            <label>Foto de portada (opcional)</label>
+            <SubirImagen valor={imagen} onChange={setImagen} />
           </div>
 
           <h2 style={{ marginTop: 20 }}>{f.tipo === "pack" || f.tipo === "personalizado" ? "Materiales por unidad (caja, bolsita, tarjeta...)" : "Materiales por hoja"}</h2>
@@ -163,7 +177,7 @@ export default function Productos() {
                   const bajo = p.stock_actual <= p.stock_minimo;
                   return (
                     <tr key={p.id}>
-                      <td className="titulo">{p.destacado && <span className="badge">Destacado</span>} {p.nombre}</td>
+                      <td className="titulo">{p.imagen_url && /* eslint-disable-next-line @next/next/no-img-element */ <img className="thumb" src={optimizada(p.imagen_url, 120)} alt="" />}{p.destacado && <span className="badge">Destacado</span>} {p.nombre}</td>
                       <td data-label="Tipo">{TIPOS.find((t) => t.v === p.tipo)?.label}</td>
                       <td data-label="Costo">{ars(c?.costo ?? 0)}</td>
                       <td data-label="Precio">{ars(p.precio_venta)}</td>
@@ -171,6 +185,7 @@ export default function Productos() {
                       <td data-label="Stock" style={bajo ? { color: "var(--alert)", fontWeight: 700 } : undefined}>{p.stock_actual}</td>
                       <td className="acciones">
                         <button className="btn ghost" onClick={() => sumarStock(p)}>Sumar stock</button>{" "}
+                        <SubirImagen compacto etiqueta={p.imagen_url ? "Cambiar foto" : "Subir foto"} onChange={(url) => cambiarFoto(p, url)} />{" "}
                         <button className="btn ghost" onClick={() => destacar(p)}>{p.destacado ? "Quitar destacado" : "Destacar"}</button>{" "}
                         <button className="btn x" onClick={() => borrar(p)}>Borrar</button>
                       </td>

@@ -1,16 +1,17 @@
 import { supabase } from "@/lib/supabase";
 import { ars } from "@/lib/cost";
 import { TIPOS } from "@/lib/types";
+import { optimizada } from "@/lib/imagen";
 
 export const dynamic = "force-dynamic";
 
-type Item = { id: string; nombre: string; tipo: string; descripcion: string | null; precio_venta: number; stock_actual: number; destacado: boolean };
+type Item = { id: string; nombre: string; tipo: string; descripcion: string | null; imagen_url: string | null; precio_venta: number; stock_actual: number; destacado: boolean };
 
 export default async function Catalogo() {
   let items: Item[] = [];
   if (supabase) {
     const { data } = await supabase.from("products")
-      .select("id,nombre,tipo,descripcion,precio_venta,stock_actual,destacado")
+      .select("id,nombre,tipo,descripcion,imagen_url,precio_venta,stock_actual,destacado")
       .eq("visible", true).order("destacado", { ascending: false }).order("nombre");
     items = (data ?? []) as Item[];
   }
@@ -22,6 +23,12 @@ export default async function Catalogo() {
         <div className="grid2">
           {items.map((p) => (
             <article className="card" key={p.id}>
+              <div className="cover">
+                {p.imagen_url
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={optimizada(p.imagen_url, 640)} alt={p.nombre} loading="lazy" />
+                  : <div className="vacia">Sin foto</div>}
+              </div>
               {p.destacado && <span className="badge">Destacado</span>}
               <h2 style={{ marginTop: p.destacado ? 8 : 0 }}>{p.nombre}</h2>
               <p className="ok" style={{ margin: "0 0 8px" }}>{TIPOS.find((t) => t.v === p.tipo)?.label}</p>

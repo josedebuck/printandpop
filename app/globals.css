@@ -118,3 +118,11 @@ dialog.sheet::backdrop { background: rgba(20, 28, 50, .55); }
 .buscador input { padding-left: 42px; padding-right: 44px; -webkit-appearance: none; appearance: none; }
 .buscador input::-webkit-search-cancel-button { display: none; }
 .buscador button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: 0; background: transparent; color: var(--muted); font-size: 24px; line-height: 1; cursor: pointer; border-radius: 10px; }
+
+/* ---------- Fotos de productos ---------- */
+.preview { display: block; max-width: 100%; max-height: 220px; border-radius: 12px; border: 1px solid var(--line); object-fit: cover; }
+.thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); vertical-align: middle; margin-right: 10px; }
+.cover { margin: -20px -20px 14px; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 14px 14px 0 0; background: #eef0f7; }
+.cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover .vacia { height: 100%; display: grid; place-items: center; color: var(--muted); font-size: 14px; }
+@media (max-width: 720px) { .cover { margin: -16px -16px 14px; border-radius: 16px 16px 0 0; } }
